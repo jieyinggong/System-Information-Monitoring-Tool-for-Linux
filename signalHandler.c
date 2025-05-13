@@ -75,7 +75,13 @@ int prompt_for_int_signal(){
 
     // printf("prompt: checking sigint: %d \n", sigint_received);
 
-    if (check_signal && check_signal()){;
+    if (check_signal && check_signal()){
+        //block SIGINT during prompting
+        sigset_t block_set, old_set;
+        sigemptyset(&block_set);
+        sigaddset(&block_set, SIGINT);
+        sigprocmask(SIG_BLOCK, &block_set, &old_set);
+
         char ans[20];
         printf("\nDo you want to quit the program? (y/n): ");
         fflush(stdout);
@@ -92,7 +98,11 @@ int prompt_for_int_signal(){
             printf("\033[2K");
             fflush(stdout);
         }
-        if (reset_sigint_received) reset_sigint_received();
+        if (reset_sigint_received) {
+            //unblock SIGINT
+            sigprocmask(SIG_SETMASK, &old_set, NULL);
+            reset_sigint_received();
+        }    
     }
     return 0;
 }

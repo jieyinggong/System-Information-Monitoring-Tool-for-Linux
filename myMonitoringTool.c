@@ -134,6 +134,14 @@ int main(int argc,char** argv){
     // Clean up remaining read ends
     safe_close(&utiliz_fd[0]);
     safe_close(&core_fd[0]);
+
+    //Wait for core child process first to avoid zombie process during execution
+    if (wait_for_children(core_pid) == -1){
+        perror("child process of main for getting core information exited abnormally.");
+        free(cla);
+        return 1;
+    }
+
     // Wait for child processes
     if (wait_for_children(utiliz_pid) == -1){
         utiliz_pid = -1;
@@ -143,11 +151,6 @@ int main(int argc,char** argv){
         return 1;
     }
 
-    if (wait_for_children(core_pid) == -1){
-        perror("child process of main for getting core information exited abnormally.");
-        free(cla);
-        return 1;
-    }
 
     free(cla);
 
